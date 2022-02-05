@@ -11,6 +11,10 @@ class Post(BaseModel):
     published: bool = True
     rating: Optional[int] = None
 
+my_posts = {1: {'title': 'title of post one', 'content': 'content of post one', 'id': 1}, 2: {'title': "favorite foods", "content": 'so many foods', 'id': 2}}
+
+def find_post(id):
+    return my_posts[id]
 
 @app.get("/")
 def root():
@@ -18,9 +22,18 @@ def root():
 
 @app.get("/posts")
 def get_posts():
-    return {"data": "This is your post"}
+    return {'data': my_posts}
 
-@app.post("/post")
+@app.get("/posts/{id}")
+def get_post(id: int):
+    print(id)
+    post = find_post(id)
+    return {"post_detail": post}
+
+@app.post("/posts")
 def create_post(post: Post):
-    print(post)
-    return {"new_post": f"title {post.title} content {post.content}"}
+    post_dict = post.dict()
+    post_id = len(my_posts) + 1
+    post_dict['id'] = post_id
+    my_posts[post_id] = post_dict
+    return {"data": post_dict}
