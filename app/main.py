@@ -1,10 +1,13 @@
-from typing import Optional
-from fastapi import FastAPI, Response, status, HTTPException
-from fastapi.params import Body
+from fastapi import FastAPI, Response, status, HTTPException, Depends
 from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
+from . import models
+from sqlalchemy.orm import Session
+from .database import engine, get_db
+
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
@@ -34,13 +37,13 @@ def root():
     return {"message": "Welcome to my api 2"}
 
 @app.get("/posts")
-def get_posts():
+def get_posts(db: Session = Depends(get_db)):
     cursor.execute("""SELECT * FROM posts""")
     posts = cursor.fetchall()
     return {'data': posts}
 
 @app.get("/posts/{id}")
-def get_post(id: int):
+def get_post(id: int, db: Session = Depends(get_db)):
     cursor.execute("""SELECT * FROM posts WHERE id= %s """, (str(id),))
     post = cursor.fetchone()
     if not post:
@@ -48,7 +51,7 @@ def get_post(id: int):
     return {"post_detail": post}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, response: Response):
+def create_post(post: Post, response: Response, db: Session = Depends(get_db)):
     post_dict = post.dict()
     cursor.execute("""INSERT INTO  posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
                       (post.title,
@@ -59,7 +62,7 @@ def create_post(post: Post, response: Response):
     return {"data": new_post}
 
 @app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
-def delete_post(id: int):
+def delete_post(id: int, db: Session = Depends(get_db)):
     cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
     deleted_post = cursor.fetchone()
     conn.commit()
@@ -68,7 +71,7 @@ def delete_post(id: int):
     return {'message': deleted_post}
 
 @app.put('/posts/{id}', status_code=status.HTTP_200_OK)
-def update_posts(id: int, post: Post):
+def update_posts(id: int, post: Post, db: Session = Depends(get_db)):
     cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id=%s returning *""", (post.title, post.content, post.published, str(id),))
     updated_post = cursor.fetchone()
     conn.commit()
