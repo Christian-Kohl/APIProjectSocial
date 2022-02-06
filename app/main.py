@@ -24,7 +24,7 @@ while True:
         print(error)
         time.sleep(2)
 
-my_posts = {1: {'title': 'title of post one', 'content': 'content of post one', 'id': 1}, 2: {'title': "favorite foods", "content": 'so many foods', 'id': 2}}
+my_posts = {}
 
 def find_post(id):
     return my_posts[id]
@@ -35,7 +35,10 @@ def root():
 
 @app.get("/posts")
 def get_posts():
-    return {'data': my_posts}
+    cursor.execute("""SELECT * FROM posts""")
+    posts = cursor.fetchall()
+    print(posts)
+    return {'data': posts}
 
 @app.get("/posts/{id}")
 def get_post(id: int, response: Response):
@@ -52,10 +55,12 @@ def get_post(id: int, response: Response):
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
 def create_post(post: Post, response: Response):
     post_dict = post.dict()
-    post_id = len(my_posts) + 1
-    post_dict['id'] = post_id
-    my_posts[post_id] = post_dict
-    return {"data": post_dict}
+    cursor.execute("""INSERT INTO  posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
+                      (post.title,
+                      post.content,
+                      post.published))
+    new_post = cursor.fetchone()
+    return {"data": new_post}
 
 @app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int):
