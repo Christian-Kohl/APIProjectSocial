@@ -1,20 +1,14 @@
 from fastapi import FastAPI, Response, status, HTTPException, Depends
-from pydantic import BaseModel
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import time
-from . import models
+from . import models, schemas
 from sqlalchemy.orm import Session
 from .database import engine, get_db
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
-
-class Post(BaseModel):
-    title: str
-    content: str
-    published: bool = True
 
 while True:
     try:
@@ -26,11 +20,6 @@ while True:
         print('connection failed')
         print(error)
         time.sleep(2)
-
-my_posts = {}
-
-def find_post(id):
-    return my_posts[id]
 
 @app.get("/")
 def root():
@@ -53,7 +42,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
     return {"post_detail": post}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: Post, response: Response, db: Session = Depends(get_db)):
+def create_post(post: schemas.Post, response: Response, db: Session = Depends(get_db)):
     # post_dict = post.dict()
     # cursor.execute("""INSERT INTO  posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
     #                   (post.title,
@@ -81,7 +70,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return {'message': query}
 
 @app.put('/posts/{id}', status_code=status.HTTP_200_OK)
-def update_posts(id: int, post: Post, db: Session = Depends(get_db)):
+def update_posts(id: int, post: schemas.Post, db: Session = Depends(get_db)):
     # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id=%s returning *""", (post.title, post.content, post.published, str(id),))
     # updated_post = cursor.fetchone()
     # conn.commit()
