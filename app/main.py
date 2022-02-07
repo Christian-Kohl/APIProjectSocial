@@ -5,6 +5,7 @@ import time
 from . import models, schemas
 from sqlalchemy.orm import Session
 from .database import engine, get_db
+from typing import List
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -25,14 +26,14 @@ while True:
 def root():
     return {"message": "Welcome to my api 2"}
 
-@app.get("/posts")
+@app.get("/posts", response_model=schemas.Post)
 def get_posts(db: Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
-    return {'data': posts}
+    return posts
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=List[schemas.Post])
 def get_post(id: int, db: Session = Depends(get_db)):
     # cursor.execute("""SELECT * FROM posts WHERE id= %s """, (str(id),))
     # post = cursor.fetchone()
@@ -41,7 +42,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
     return {"post_detail": post}
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.Post)
 def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # post_dict = post.dict()
     # cursor.execute("""INSERT INTO  posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
@@ -54,7 +55,7 @@ def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
-    return {"data": new_post}
+    return new_post
 
 @app.delete('/posts/{id}', status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
@@ -69,7 +70,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     
     return {'message': query}
 
-@app.put('/posts/{id}', status_code=status.HTTP_200_OK)
+@app.put('/posts/{id}', status_code=status.HTTP_200_OK, response_model=schemas.Post)
 def update_posts(id: int, post: schemas.PostCreate, db: Session = Depends(get_db)):
     # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id=%s returning *""", (post.title, post.content, post.published, str(id),))
     # updated_post = cursor.fetchone()
@@ -80,4 +81,4 @@ def update_posts(id: int, post: schemas.PostCreate, db: Session = Depends(get_db
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="That id does not exist")
     post_query.update(post.dict(), synchronize_session=False)
     db.commit()
-    return {"data": post_query.first()}
+    return post_query.first()
