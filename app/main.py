@@ -42,7 +42,7 @@ def get_post(id: int, db: Session = Depends(get_db)):
     return {"post_detail": post}
 
 @app.post("/posts", status_code=status.HTTP_201_CREATED)
-def create_post(post: schemas.Post, response: Response, db: Session = Depends(get_db)):
+def create_post(post: schemas.PostCreate, db: Session = Depends(get_db)):
     # post_dict = post.dict()
     # cursor.execute("""INSERT INTO  posts (title, content, published) VALUES (%s, %s, %s) RETURNING * """,
     #                   (post.title,
@@ -70,7 +70,7 @@ def delete_post(id: int, db: Session = Depends(get_db)):
     return {'message': query}
 
 @app.put('/posts/{id}', status_code=status.HTTP_200_OK)
-def update_posts(id: int, post: schemas.Post, db: Session = Depends(get_db)):
+def update_posts(id: int, post: schemas.PostCreate, db: Session = Depends(get_db)):
     # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id=%s returning *""", (post.title, post.content, post.published, str(id),))
     # updated_post = cursor.fetchone()
     # conn.commit()
