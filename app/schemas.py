@@ -40,7 +40,7 @@ class UserLogin(BaseModel):
     password: str
 
 
-class AccessToken(BaseModel):
+class Token(BaseModel):
     access_token: str
     token_type: str
 

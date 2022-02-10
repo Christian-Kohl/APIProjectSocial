@@ -14,7 +14,7 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.Post])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
     posts = db.query(models.Post).all()
@@ -22,7 +22,7 @@ def get_posts(db: Session = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=schemas.Post)
-def get_post(id: int, db: Session = Depends(get_db)):
+def get_post(id: int, db: Session = Depends(get_db), user_id: int = Depends(oauth2.get_current_user)):
     # cursor.execute("""SELECT * FROM posts WHERE id= %s """, (str(id),))
     # post = cursor.fetchone()
     post = db.query(models.Post).filter(models.Post.id == id).first()
