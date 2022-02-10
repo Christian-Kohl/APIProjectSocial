@@ -12,10 +12,11 @@ app = FastAPI()
 
 while True:
     try:
-        conn = psycopg2.connect(host='localhost', database='fastapi', user='postgres', password='password', cursor_factory=RealDictCursor)
+        conn = psycopg2.connect(host='localhost', database='fastapi',
+                                user='postgres', password='password', cursor_factory=RealDictCursor)
         cursor = conn.cursor()
         print("Database connection was successful")
-        break;
+        break
     except Exception as error:
         print('connection failed')
         print(error)
@@ -24,6 +25,7 @@ while True:
 app.include_router(post.router)
 app.include_router(user.router)
 app.include_router(auth.router)
+
 
 @app.get("/")
 def root():
