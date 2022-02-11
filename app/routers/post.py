@@ -1,11 +1,9 @@
 from fastapi import Response, status, HTTPException, Depends, APIRouter
-
 from app import oauth2
-
 from .. import models, schemas
 from sqlalchemy.orm import Session
 from ..database import get_db
-from typing import List
+from typing import List, Optional
 
 router = APIRouter(
     prefix="/posts",
@@ -14,11 +12,14 @@ router = APIRouter(
 
 
 @router.get("/", response_model=List[schemas.Post])
-def get_posts(db: Session = Depends(get_db), current_user: models.User = Depends(oauth2.get_current_user)):
+def get_posts(db: Session = Depends(get_db),
+              current_user: models.User = Depends(oauth2.get_current_user),
+              limit: int=10,
+              page: int=0,
+              search: Optional[str] = ""):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
-    posts = db.query(models.Post).all()
-    print(current_user.email)
+    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(page*limit).all()
     return posts
 
 
