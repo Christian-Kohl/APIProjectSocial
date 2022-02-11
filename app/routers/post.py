@@ -14,12 +14,13 @@ router = APIRouter(
 @router.get("/", response_model=List[schemas.Post])
 def get_posts(db: Session = Depends(get_db),
               current_user: models.User = Depends(oauth2.get_current_user),
-              limit: int=10,
-              page: int=0,
+              limit: int = 10,
+              page: int = 0,
               search: Optional[str] = ""):
     # cursor.execute("""SELECT * FROM posts""")
     # posts = cursor.fetchall()
-    posts = db.query(models.Post).filter(models.Post.title.contains(search)).limit(limit).offset(page*limit).all()
+    posts = db.query(models.Post).filter(models.Post.title.contains(
+        search)).limit(limit).offset(page*limit).all()
     return posts
 
 
@@ -57,9 +58,11 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: models.Use
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
     if post == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id {id} does not exist")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id {id} does not exist")
     if post.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized")
     post_query.delete(synchronize_session=False)
     db.commit()
 
@@ -74,7 +77,8 @@ def update_posts(id: int, post: schemas.PostCreate, db: Session = Depends(get_db
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post_db = post_query.first()
     if post_db.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized")
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized")
     if post_db == None:
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="That id does not exist")
     post_query.update(post.dict(), synchronize_session=False)
