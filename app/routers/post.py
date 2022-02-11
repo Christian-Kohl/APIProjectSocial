@@ -53,12 +53,13 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: models.Use
     # cursor.execute("""DELETE FROM posts WHERE id = %s returning *""", (str(id),))
     # deleted_post = cursor.fetchone()
     # conn.commit()
-    post = db.query(models.Post).filter(models.Post.id == id)
-    if post.first() == None:
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
+    if post == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id {id} does not exist")
-    if post.first().owner_id != current_user.id:
+    if post.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized")
-    post.delete(synchronize_session=False)
+    post_query.delete(synchronize_session=False)
     db.commit()
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -71,7 +72,7 @@ def update_posts(id: int, post: schemas.PostCreate, db: Session = Depends(get_db
     # conn.commit()
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post_db = post_query.first()
-    if post.owner_id != current_user.id:
+    if post_db.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Unauthorized")
     if post_db == None:
         return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="That id does not exist")
