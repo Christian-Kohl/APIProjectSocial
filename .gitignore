@@ -1,2 +1,3 @@
 ./apiproject
 __pycache__
+.env
