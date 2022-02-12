@@ -15,7 +15,6 @@ class Post(Base):
                         nullable=False, server_default=text('now()'))
     owner_id = Column(Integer, ForeignKey(
         'users.id', ondelete="CASCADE"), nullable=False)
-
     owner = relationship("User")
 
 
@@ -26,6 +25,7 @@ class User(Base):
     password = Column(String, nullable=False)
     created_at = Column(TIMESTAMP(timezone=True),
                         nullable=False, server_default=text('now()'))
+    phone_number = Column(String)
 
 
 class Vote(Base):
