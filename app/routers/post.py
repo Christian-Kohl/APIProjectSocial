@@ -1,4 +1,5 @@
 from fastapi import Response, status, HTTPException, Depends, APIRouter
+from sqlalchemy import func
 from app import oauth2
 from .. import models, schemas
 from sqlalchemy.orm import Session
@@ -11,7 +12,7 @@ router = APIRouter(
 )
 
 
-@router.get("/", response_model=List[schemas.Post])
+@router.get("/", response_model=List[schemas.PostOut])
 def get_posts(db: Session = Depends(get_db),
               current_user: models.User = Depends(oauth2.get_current_user),
               limit: int = 10,
@@ -21,7 +22,11 @@ def get_posts(db: Session = Depends(get_db),
     # posts = cursor.fetchall()
     posts = db.query(models.Post).filter(models.Post.title.contains(
         search)).limit(limit).offset(page*limit).all()
-    return posts
+
+    results = db.query(models.Post, func.count(models.Vote.post_id).label("votes")).join(
+        models.Vote, models.Vote.post_id == models.Post.id, isouter=True).group_by(models.Post.id).all()
+    print(results)
+    return results
 
 
 @router.get("/{id}", response_model=schemas.Post)
